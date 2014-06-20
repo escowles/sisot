@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<project name="sisot" default="webapp" basedir=".">
+  <property name="appName" value="sisot"/>
+  <property name="src"     value="${basedir}/src"/>
+  <property name="root"    value="${src}/root"/>
+  <property name="java"    value="${src}/java"/>
+  <property name="lib"     value="${src}/lib"/>
+  <property name="dist"    value="${basedir}/dist"/>
+  <property name="tmp"     value="${basedir}/tmp"/>
+
+  <path id="classpath">
+    <fileset dir="${lib}" id="lib">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <!-- remove temp files -->
+  <target name="clean" description="Delete generated directories">
+    <delete dir="${tmp}"/>
+  </target>
+
+  <!-- prepare -->
+  <target name="prepare" description="Create output directories.">
+    <mkdir dir="${dist}"/>
+    <mkdir dir="${tmp}"/>
+    <mkdir dir="${tmp}/classes"/>
+  </target>
+
+  <!-- compile -->
+  <target name="compile" description="Compile Java classes" depends="prepare">
+    <!-- compile -->
+    <javac srcdir="${java}" destdir="${tmp}/classes"
+        deprecation="on" debug="true" debuglevel="lines,source"
+        includeantruntime="false" source="1.7" target="1.7">
+      <classpath refid="classpath"/>
+    </javac>
+  </target>
+
+  <!-- build webapp -->
+  <target name="webapp" description="Build WAR file" depends="compile">
+    <!-- move old war file out of the way -->
+    <move file="${dist}/${appName}.war" tofile="${dist}/${appName}.bak"
+      failonerror="false"/>
+
+    <!-- generate new war file -->
+    <war destfile="${dist}/${appName}.war" webxml="${src}/web/web.xml">
+      <fileset dir="${root}"/>
+      <classes dir="${tmp}/classes"/>
+      <lib dir="${lib}">
+        <exclude name="servlet-1.6.jar"/>
+      </lib>
+    </war>
+  </target>
+
+</project>
