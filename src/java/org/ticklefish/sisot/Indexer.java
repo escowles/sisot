@@ -8,6 +8,10 @@ import java.util.List;
 import java.util.Properties;
 import java.util.TimeZone;
 
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -33,12 +37,12 @@ import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
 
 /**
- * Sisot indexer serlvet.
+ * Sisot indexer.
  *
  * @author escowles
  * @since 2014-06-20
 **/
-public class Indexer extends AbstractServlet
+public class Indexer extends AbstractServlet implements Runnable
 {
 	private SimpleDateFormat df = new SimpleDateFormat(
 		"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
@@ -49,6 +53,10 @@ public class Indexer extends AbstractServlet
 		super.init(cfg);
 		init(props);
 		df.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+		// schedule execution
+		ScheduledExecutorService exec = new ScheduledThreadPoolExecutor(1);
+		exec.scheduleWithFixedDelay(this, 0, 30, TimeUnit.MINUTES);
 	}
 	protected void init( Properties props )
 	{
@@ -73,12 +81,12 @@ public class Indexer extends AbstractServlet
 		}
 	}
 
-	public void doGet( HttpServletRequest req, HttpServletResponse res )
+	public void run()
 	{
-		// if not configured, show config form
-		if ( solr == null )
+		// make sure we're configured
+		if ( twitter == null )
 		{
-			configForm(res);
+			System.out.println("Not configured, will retry in 30 minutes");
 			return;
 		}
 
@@ -92,26 +100,15 @@ public class Indexer extends AbstractServlet
 			if ( limitRemaining < 1 )
 			{
 				Date d = new Date( limit.getResetTimeInSeconds() * 1000L );
-				System.err.println(
+				System.out.println(
 					"Rate limit exceeded, retry after " + df.format(d)
 				);
+				return;
 			}
 		}
 		catch ( Exception ex )
 		{
 			ex.printStackTrace();
-		}
-
-		// open output
-		PrintWriter out = null;
-		try
-		{
-			out = res.getWriter();
-		}
-		catch ( Exception ex )
-		{
-			ex.printStackTrace();
-			return;
 		}
 
 		// get last tweet id
@@ -124,7 +121,12 @@ public class Indexer extends AbstractServlet
 			query.setFields( "id" );
 			query.setRows( 1 );
 			SolrDocumentList results = solr.query(query).getResults();
-			last = Long.parseLong((String)results.get(0).getFirstValue("id"));
+			if ( results.size() > 0 )
+			{
+				last = Long.parseLong(
+					(String)results.get(0).getFirstValue("id")
+				);
+			}
 		}
 		catch ( Exception ex )
 		{
@@ -132,7 +134,6 @@ public class Indexer extends AbstractServlet
 		}
 
 		// start indexing
-		out.println("<html><body>");
 		try
 		{
 			User user = twitter.verifyCredentials();
@@ -162,7 +163,8 @@ public class Indexer extends AbstractServlet
 				}
 			}
 			long dur = System.currentTimeMillis() - start;
-			out.println("indexed " + records + " tweets in " + dur + " msec");
+			System.out.println("indexed " + records + " tweets in " + dur
+				+ " msec");
 		}
 		catch ( TwitterException ex )
 		{
@@ -171,16 +173,15 @@ public class Indexer extends AbstractServlet
 				Date d = new Date(
 					ex.getRateLimitStatus().getResetTimeInSeconds() * 1000L
 				);
-				out.println(
+				System.out.println(
 					"Rate limit exceeded, retry after " + df.format(d)
 				);
 			}
 			else
 			{
-				out.println( "Error indexing tweets: " + ex.toString() );
+				System.out.println( "Error indexing tweets: " + ex.toString() );
 			}
 		}
-		out.println("</body></html>");
 	}
 	private SolrInputDocument toDocument( Status status )
 	{
@@ -188,6 +189,7 @@ public class Indexer extends AbstractServlet
 
 		// basic info
 		doc.addField("id",         status.getId() );
+		doc.addField("re_id",      status.getInReplyToStatusId() );
 		doc.addField("text",       status.getText() );
 		doc.addField("date",       df.format(status.getCreatedAt()) );
 

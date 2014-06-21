@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -44,6 +45,7 @@ public class Search extends AbstractServlet
 		PrintWriter out = null;
 		try
 		{
+			res.setContentType("text/html; charset=UTF-8");
 			out = res.getWriter();
 		}
 		catch ( Exception ex )
@@ -52,12 +54,15 @@ public class Search extends AbstractServlet
 			return;
 		}
 
-		out.println("<html><head>");
+		out.println("<html>");
+		out.println("<head>");
 		out.println("<link rel=\"stylesheet\" type=\"text/css\" "
 			+ "href=\"sisot.css\"></link>");
-		out.println("<body><table>" );
+		out.println("</head>");
+		out.println("<body>" );
 
 		// do query
+		String re   = req.getParameter("re");
 		String q    = req.getParameter("q");
 		String tag  = req.getParameter("tag");
 		String user = req.getParameter("user");
@@ -65,7 +70,11 @@ public class Search extends AbstractServlet
 		SolrQuery query = new SolrQuery();
 		query.addSortField( "id", SolrQuery.ORDER.desc );
 		query.setRows( 50 );
-		if ( pop(tag)  )
+		if ( pop(re) )
+		{
+			out.println( "<h1>conversation</h1>" );
+		}
+		if ( pop(tag) )
 		{
 			query.addFilterQuery("tag:" + tag);
 			out.println(
@@ -89,8 +98,16 @@ public class Search extends AbstractServlet
 		SolrDocumentList results = null;
 		try
 		{
-			QueryResponse qr = solr.query( query );
-			results = qr.getResults();
+			if ( re != null && !re.equals("-1") )
+			{
+				results = new SolrDocumentList();
+				collect( results, re );
+			}
+			else
+			{
+				QueryResponse qr = solr.query( query );
+				results = qr.getResults();
+			}
 		}
 		catch ( Exception ex )
 		{
@@ -99,20 +116,42 @@ public class Search extends AbstractServlet
 		}
 
 		// output results
-		for ( int i = 0; results != null && i < results.size(); i++ )
-		{
-			out.println( format(results.get(i)) );
-		}
-
 		if ( results == null || results.size() == 0 )
 		{
-			out.println("no results found");
+			out.println("<p>no results found</p>");
+		}
+		else
+		{
+			out.println("<table>");
+			for ( int i = 0; results != null && i < results.size(); i++ )
+			{
+				out.println( format(results.get(i)) );
+			}
+			out.println("</table>");
 		}
 
 		// finish output
-		out.println("</table></body></html>");
+		out.println("</body>");
+		out.println("</html>");
 		out.flush();
 		out.close();
+	}
+	private void collect( SolrDocumentList docs, String id )
+		throws SolrServerException
+	{
+		SolrQuery query = new SolrQuery("id:" + id);
+		SolrDocumentList results = solr.query(query).getResults();
+		for ( SolrDocument doc : results )
+		{
+			docs.add( doc );
+
+			// recursively find replies
+			String replyTo = (String)doc.getFirstValue("re_id");
+			if ( replyTo != null && !replyTo.equals("-1") )
+			{
+				collect( docs, replyTo );
+			}
+		}
 	}
 
 	private static boolean pop( String s )
@@ -127,6 +166,8 @@ public class Search extends AbstractServlet
 		String userImage = (String)doc.getFirstValue("user_image");
 		String date      = df.format(doc.getFirstValue("date"));
 		String text      = (String)doc.getFirstValue("text");
+		String id        = (String)doc.getFirstValue("id");
+		String replyTo   = (String)doc.getFirstValue("re_id");
 
         StringBuffer buf = new StringBuffer();
         buf.append("<tr>");
@@ -139,6 +180,13 @@ public class Search extends AbstractServlet
         buf.append( linkTo("?user=" + userID, userName) + ": <br/>");
         buf.append( linkify(text) );
         buf.append("</td>");
+		if (  replyTo != null &&!replyTo.equals("-1") )
+		{
+			buf.append("<td>");
+			buf.append("<a href=\"?re=" + id + "\">");
+			buf.append("<img src=\"conversation.png\"></a>");
+			buf.append("</td>");
+		}
         buf.append("</tr>");
         return buf.toString();
     }

@@ -10,17 +10,17 @@
   <servlet>
     <servlet-name>Indexer</servlet-name>
     <servlet-class>org.ticklefish.sisot.Indexer</servlet-class>
+    <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet>
     <servlet-name>Search</servlet-name>
     <servlet-class>org.ticklefish.sisot.Search</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>Indexer</servlet-name>
-    <url-pattern>/index</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
     <servlet-name>Search</servlet-name>
     <url-pattern>/search</url-pattern>
   </servlet-mapping>
+  <welcome-file-list>
+    <welcome-file>search</welcome-file>
+  </welcome-file-list>
 </web-app>
