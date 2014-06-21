@@ -17,6 +17,10 @@
     <servlet-class>org.ticklefish.sisot.Search</servlet-class>
   </servlet>
   <servlet-mapping>
+    <servlet-name>Indexer</servlet-name>
+    <url-pattern>/index</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
     <servlet-name>Search</servlet-name>
     <url-pattern>/search</url-pattern>
   </servlet-mapping>

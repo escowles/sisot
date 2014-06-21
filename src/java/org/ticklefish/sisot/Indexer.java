@@ -31,6 +31,7 @@ import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
+import twitter4j.URLEntity;
 import twitter4j.User;
 import twitter4j.auth.AccessToken;
 import twitter4j.conf.Configuration;
@@ -44,15 +45,16 @@ import twitter4j.conf.ConfigurationBuilder;
 **/
 public class Indexer extends AbstractServlet implements Runnable
 {
-	private SimpleDateFormat df = new SimpleDateFormat(
+	private SimpleDateFormat utcFormat = new SimpleDateFormat(
 		"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 	);
+	private SimpleDateFormat localFormat = new SimpleDateFormat("MM/dd HH:mm");
 	Twitter twitter;
 	public void init( ServletConfig cfg )
 	{
 		super.init(cfg);
 		init(props);
-		df.setTimeZone(TimeZone.getTimeZone("UTC"));
+		utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
 		// schedule execution
 		ScheduledExecutorService exec = new ScheduledThreadPoolExecutor(1);
@@ -81,6 +83,87 @@ public class Indexer extends AbstractServlet implements Runnable
 		}
 	}
 
+	public void doGet( HttpServletRequest req, HttpServletResponse res )
+	{
+		PrintWriter out = null;
+		try
+		{
+			res.setContentType("text/plain");
+			out = res.getWriter();
+		}
+		catch ( Exception ex )
+		{
+			ex.printStackTrace();
+			return;
+		}
+
+		int skip = 0;
+		String skipStr = req.getParameter("skip");
+		if ( skipStr != null && !skipStr.trim().equals("") )
+		{
+			skip = Integer.parseInt(skipStr);
+			out.println("skip set to " + skip);
+		}
+		int max = skip + 1;
+		int batch = 50;
+		int records = 0;
+		out.println("reindexing, starting at " + skip);
+		out.flush();
+		int limit = remaining( "statuses", "show/:id", out );
+		try
+		{
+			while ( skip < max && records < limit )
+			{
+				// get a page of records
+				long start = System.currentTimeMillis();
+				SolrQuery query = new SolrQuery();
+				query.setStart( skip );
+				query.setRows( batch );
+				query.addSortField( "id", SolrQuery.ORDER.asc );
+				SolrDocumentList docs = solr.query(query).getResults();
+	
+				// update paging
+				max = (int)docs.getNumFound();
+				skip += batch;
+	
+				// reindex records
+				for ( int i = 0; i < docs.size() && records < limit; i++ )
+				{
+					String id = (String)docs.get(i).getFirstValue("id");
+					Status tweet = twitter.showStatus(Long.parseLong(id));
+					solr.add( toDocument(tweet) );
+					records++;
+				}
+
+				long dur = System.currentTimeMillis() - start;
+				out.println("indexed " + batch + " tweets in " + dur + " msec");
+				out.flush();
+			}
+		}
+		catch ( Exception ex )
+		{
+			ex.printStackTrace();
+			out.println("error indexing: " + ex.toString());
+		}
+
+		// if we finished, reset skip
+		if ( records < limit )
+		{
+			skip = 0;
+			out.println("rate limit remaining: " + (limit - records));
+		}
+		else
+		{
+			out.println(
+				"rate limit reached, will restart at " + skip + " of " + max
+			);
+		}
+
+		out.println("done: " + records + " tweets indexed");
+		out.flush();
+		out.close();
+	}
+
 	public void run()
 	{
 		// make sure we're configured
@@ -91,24 +174,12 @@ public class Indexer extends AbstractServlet implements Runnable
 		}
 
 		// check rate limit status
-		int limitRemaining = 0;
-		try
+		int limit = remaining(
+			"statuses", "home_timeline", new PrintWriter(System.out)
+		);
+		if ( limit < 1 )
 		{
-			RateLimitStatus limit = twitter.getRateLimitStatus("statuses")
-				.get("/statuses/home_timeline");
-			limitRemaining = limit.getRemaining();
-			if ( limitRemaining < 1 )
-			{
-				Date d = new Date( limit.getResetTimeInSeconds() * 1000L );
-				System.out.println(
-					"Rate limit exceeded, retry after " + df.format(d)
-				);
-				return;
-			}
-		}
-		catch ( Exception ex )
-		{
-			ex.printStackTrace();
+			return;
 		}
 
 		// get last tweet id
@@ -144,11 +215,11 @@ public class Indexer extends AbstractServlet implements Runnable
 			}
 			int records = 0;
 			long start = System.currentTimeMillis();
-			for ( int page = 1; limitRemaining-- > 0; page++ )
+			for ( int page = 1; limit-- > 0; page++ )
 			{
 				paging.setPage(page);
 				List<Status> statuses = twitter.getHomeTimeline(paging);
-				if ( statuses.size() == 0 ) { limitRemaining = 0; }
+				if ( statuses.size() == 0 ) { limit = 0; }
 				for (Status status : statuses)
 				{
 					try
@@ -163,8 +234,7 @@ public class Indexer extends AbstractServlet implements Runnable
 				}
 			}
 			long dur = System.currentTimeMillis() - start;
-			System.out.println("indexed " + records + " tweets in " + dur
-				+ " msec");
+			System.out.println("indexed " + records + " tweets in " + dur + " msec");
 		}
 		catch ( TwitterException ex )
 		{
@@ -174,7 +244,7 @@ public class Indexer extends AbstractServlet implements Runnable
 					ex.getRateLimitStatus().getResetTimeInSeconds() * 1000L
 				);
 				System.out.println(
-					"Rate limit exceeded, retry after " + df.format(d)
+					"Rate limit exceeded, retry after " + localFormat.format(d)
 				);
 			}
 			else
@@ -183,6 +253,30 @@ public class Indexer extends AbstractServlet implements Runnable
 			}
 		}
 	}
+
+	private int remaining( String group, String item, PrintWriter out )
+	{
+		// check rate limit status
+		int limit = 0;
+		try
+		{
+			RateLimitStatus limitStatus = twitter.getRateLimitStatus(group)
+				.get("/" + group + "/" + item );
+			limit = limitStatus.getRemaining();
+			if ( limit < 1 )
+			{
+				Date d = new Date(limitStatus.getResetTimeInSeconds() * 1000L);
+				out.println("Rate limit exceeded, retry after " + localFormat.format(d));
+			}
+		}
+		catch ( Exception ex )
+		{
+			ex.printStackTrace();
+			limit = -1;
+		}
+
+		return limit;
+	}
 	private SolrInputDocument toDocument( Status status )
 	{
 		SolrInputDocument doc = new SolrInputDocument();
@@ -190,8 +284,8 @@ public class Indexer extends AbstractServlet implements Runnable
 		// basic info
 		doc.addField("id",         status.getId() );
 		doc.addField("re_id",      status.getInReplyToStatusId() );
-		doc.addField("text",       status.getText() );
-		doc.addField("date",       df.format(status.getCreatedAt()) );
+		doc.addField("text",       expandedText(status) );
+		doc.addField("date",       utcFormat.format(status.getCreatedAt()) );
 
 		// user info
 		doc.addField("user_id",    status.getUser().getScreenName() );
@@ -213,5 +307,16 @@ public class Indexer extends AbstractServlet implements Runnable
 		}
 
 		return doc;
+	}
+	private static String expandedText( Status status )
+	{
+		String s = status.getText();
+		URLEntity[] urls = status.getURLEntities();
+		for ( int i = 0; i < urls.length; i++ )
+		{
+			URLEntity url = urls[i];
+			s = s.replace( url.getURL(), url.getExpandedURL() );
+		}
+		return s;
 	}
 }

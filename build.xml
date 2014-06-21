@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <project name="sisot" default="webapp" basedir=".">
+  <property file="${user.home}/build.properties"/>
   <property name="appName" value="sisot"/>
   <property name="src"     value="${basedir}/src"/>
   <property name="root"    value="${src}/root"/>
@@ -50,6 +51,12 @@
         <exclude name="servlet-1.6.jar"/>
       </lib>
     </war>
+  </target>
+
+  <!-- deploy webapp -->
+  <target name="local-deploy" description="Deploy webapp to local dir">
+    <echo level="info" message="deploying ${dist}/${appName}.war"/>
+    <copy file="${dist}/${appName}.war" todir="${deploy.home}"/>
   </target>
 
 </project>

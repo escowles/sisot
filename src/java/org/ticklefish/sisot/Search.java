@@ -2,6 +2,8 @@ package org.ticklefish.sisot;
 
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Properties;
 
 import javax.servlet.ServletConfig;
@@ -168,6 +170,7 @@ public class Search extends AbstractServlet
 		String text      = (String)doc.getFirstValue("text");
 		String id        = (String)doc.getFirstValue("id");
 		String replyTo   = (String)doc.getFirstValue("re_id");
+		Collection  media = doc.getFieldValues("media");
 
         StringBuffer buf = new StringBuffer();
         buf.append("<tr>");
@@ -180,13 +183,24 @@ public class Search extends AbstractServlet
         buf.append( linkTo("?user=" + userID, userName) + ": <br/>");
         buf.append( linkify(text) );
         buf.append("</td>");
+		buf.append("<td>");
 		if (  replyTo != null &&!replyTo.equals("-1") )
 		{
-			buf.append("<td>");
 			buf.append("<a href=\"?re=" + id + "\">");
 			buf.append("<img src=\"conversation.png\"></a>");
-			buf.append("</td>");
 		}
+		if ( media != null )
+		{
+			for ( Iterator it = media.iterator(); it.hasNext(); )
+			{
+				String mediaURL = (String)it.next();
+				buf.append(
+					"<a href=\"" + mediaURL + "\"><img height=\"48\" "
+					+ "width=\"48\" src=\"" + mediaURL + "\"/></a>"
+				);
+			}
+		}
+		buf.append("</td>");
         buf.append("</tr>");
         return buf.toString();
     }
@@ -196,9 +210,10 @@ public class Search extends AbstractServlet
         String[] words = s.split("\\s+");
         for ( int i = 0; i < words.length; i++ )
         {
-            if ( words[i].startsWith("@") )
+            if ( words[i].startsWith("@") || words[i].startsWith(".@") )
             {
-                String link = "?user=" + words[i].substring(1);
+                String link = "?user=" + words[i].substring(
+					words[i].indexOf("@"));
                 buf.append( linkTo(link, words[i]) );
             }
             else if ( words[i].startsWith("#") )
