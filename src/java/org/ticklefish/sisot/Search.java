@@ -109,8 +109,9 @@ public class Search extends AbstractServlet
 		if ( q == null ) { q = ""; }
 		else { stem += "q=" + q + "&"; }
 		query.setQuery( q ); // null/blank?
+		out.println("<table id=\"header\"><tr><td id=\"search\">");
 		out.println("<form><input name=\"q\" value=\"" + q + "\"/>");
-		out.println("<input type=\"submit\" value=\"search\"/></form>");
+		out.println("<input type=\"submit\" value=\"search\"/></form></td>");
 
 		SolrDocumentList results = null;
 		try
@@ -133,7 +134,7 @@ public class Search extends AbstractServlet
 		}
 
 		stem += "page=";
-		out.println("<div id=\"pager\">");
+		out.println("<td id=\"pager\">");
 		if ( page > 1 )
 		{
 			out.println( "<a href=\"" + stem + (page - 1) + "\">prev</a> " );
@@ -143,7 +144,7 @@ public class Search extends AbstractServlet
 		{
 			out.println( " <a href=\"" + stem + (page + 1) + "\">next</a>" );
 		}
-		out.println("</div>");
+		out.println("</td></tr></table>");
 
 		// output results
 		if ( results == null || results.size() == 0 )

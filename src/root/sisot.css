@@ -1,4 +1,6 @@
 body { font-family: sans-serif; }
 h1 { font-size: medium; }
 td { padding: 6px 3px; }
-#pager { float: right; clear: both; }
+#header { width: 100%; }
+#search { text-align: left; }
+#pager { text-align: right; vertical-align: top; }
