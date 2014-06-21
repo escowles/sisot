@@ -110,6 +110,7 @@ public class Indexer extends AbstractServlet implements Runnable
 		out.println("reindexing, starting at " + skip);
 		out.flush();
 		int limit = remaining( "statuses", "show/:id", out );
+
 		try
 		{
 			while ( skip < max && records < limit )
@@ -129,10 +130,25 @@ public class Indexer extends AbstractServlet implements Runnable
 				// reindex records
 				for ( int i = 0; i < docs.size() && records < limit; i++ )
 				{
-					String id = (String)docs.get(i).getFirstValue("id");
-					Status tweet = twitter.showStatus(Long.parseLong(id));
-					solr.add( toDocument(tweet) );
-					records++;
+					String id = null;
+					try
+					{
+						id = (String)docs.get(i).getFirstValue("id");
+						Status tweet = twitter.showStatus(Long.parseLong(id));
+						solr.add( toDocument(tweet) );
+						records++;
+					}
+					catch ( TwitterException ex )
+					{
+						if ( ex.exceededRateLimitation() )
+						{
+							throw ex;
+						}
+						out.println(
+							"error indexing " + id + ": " + ex.toString()
+						);
+						ex.printStackTrace();
+					}
 				}
 
 				long dur = System.currentTimeMillis() - start;

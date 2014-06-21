@@ -69,16 +69,29 @@ public class Search extends AbstractServlet
 		String tag  = req.getParameter("tag");
 		String user = req.getParameter("user");
 
+		int pageSize = 50;
+		int page = 1;
+		String pageStr = req.getParameter("page");
+		if ( pop(pageStr) )
+		{
+			page = Integer.parseInt(pageStr);
+		}
+		int start = (page - 1) * 50;
+
 		SolrQuery query = new SolrQuery();
+		query.setStart( start );
 		query.addSortField( "id", SolrQuery.ORDER.desc );
-		query.setRows( 50 );
+		query.setRows( pageSize );
+		String stem = "?";
 		if ( pop(re) )
 		{
 			out.println( "<h1>conversation</h1>" );
+			stem += "re=" + re + "&";
 		}
 		if ( pop(tag) )
 		{
 			query.addFilterQuery("tag:" + tag);
+			stem += "tag=" + tag + "&";
 			out.println(
 				"<h1>tag: " + tag + " <a href=\"http://twitter.com/hashtag/"
 				+ tag + "\"><img src=\"twitter.png\"/></a></h1>"
@@ -87,12 +100,14 @@ public class Search extends AbstractServlet
 		if ( pop(user) )
 		{
 			query.addFilterQuery("user_id:" + user);
+			stem += "user=" + user + "&";
 			out.println(
 				"<h1>user: " + user + " <a href=\"http://twitter.com/" + user
 				+ "\"><img src=\"twitter.png\"/></a></h1>"
 			);
 		}
 		if ( q == null ) { q = ""; }
+		else { stem += "q=" + q + "&"; }
 		query.setQuery( q ); // null/blank?
 		out.println("<form><input name=\"q\" value=\"" + q + "\"/>");
 		out.println("<input type=\"submit\" value=\"search\"/></form>");
@@ -116,6 +131,19 @@ public class Search extends AbstractServlet
 			ex.printStackTrace();
 			results = null;
 		}
+
+		stem += "page=";
+		out.println("<div id=\"pager\">");
+		if ( page > 1 )
+		{
+			out.println( "<a href=\"" + stem + (page - 1) + "\">prev</a> " );
+		}
+		out.println( page );
+		if ( results.getNumFound() > (page*pageSize) )
+		{
+			out.println( " <a href=\"" + stem + (page + 1) + "\">next</a>" );
+		}
+		out.println("</div>");
 
 		// output results
 		if ( results == null || results.size() == 0 )

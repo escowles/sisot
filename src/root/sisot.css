@@ -1,2 +1,4 @@
-h1 { font-size: medium; font-family: sans-serif; }
-td { padding: 6px 3px; font-family: sans-serif; }
+body { font-family: sans-serif; }
+h1 { font-size: medium; }
+td { padding: 6px 3px; }
+#pager { float: right; clear: both; }
