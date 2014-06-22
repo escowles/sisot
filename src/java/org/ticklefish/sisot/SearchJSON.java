@@ -187,13 +187,13 @@ public class SearchJSON extends AbstractServlet
     private static String json( SolrDocument doc )
     {
 		JSONObject json = new JSONObject();
-		json.put( "userID",    (String)doc.getFirstValue("user_id") );
-		json.put( "userName",  (String)doc.getFirstValue("user_name") );
-		json.put( "userImage", (String)doc.getFirstValue("user_image") );
-		json.put( "date",      df.format(doc.getFirstValue("date")) );
-		json.put( "text",      (String)doc.getFirstValue("text") );
-		json.put( "id",        (String)doc.getFirstValue("id") );
-		json.put( "replyTo",   (String)doc.getFirstValue("re_id") );
+		json.put( "user_id",    (String)doc.getFirstValue("user_id") );
+		json.put( "user_name",  (String)doc.getFirstValue("user_name") );
+		json.put( "user_image", (String)doc.getFirstValue("user_image") );
+		json.put( "date",       df.format(doc.getFirstValue("date")) );
+		json.put( "text",       (String)doc.getFirstValue("text") );
+		json.put( "id",         (String)doc.getFirstValue("id") );
+		json.put( "re_id",      (String)doc.getFirstValue("re_id") );
 
 		Collection  media = doc.getFieldValues("media");
 		List<String> mediaList = new ArrayList<>();
