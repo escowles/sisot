@@ -3,6 +3,7 @@ package org.ticklefish.sisot;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -43,26 +44,6 @@ public class Search extends AbstractServlet
 			return;
 		}
 
-		// output header
-		PrintWriter out = null;
-		try
-		{
-			res.setContentType("text/html; charset=UTF-8");
-			out = res.getWriter();
-		}
-		catch ( Exception ex )
-		{
-			ex.printStackTrace();
-			return;
-		}
-
-		out.println("<html>");
-		out.println("<head>");
-		out.println("<link rel=\"stylesheet\" type=\"text/css\" "
-			+ "href=\"sisot.css\"></link>");
-		out.println("</head>");
-		out.println("<body>" );
-
 		// do query
 		String re   = req.getParameter("re");
 		String q    = req.getParameter("q");
@@ -79,20 +60,21 @@ public class Search extends AbstractServlet
 		int start = (page - 1) * 50;
 
 		SolrQuery query = new SolrQuery();
+		StringBuffer header = new StringBuffer();
 		query.setStart( start );
 		query.addSortField( "id", SolrQuery.ORDER.desc );
 		query.setRows( pageSize );
 		String stem = "?";
 		if ( pop(re) )
 		{
-			out.println( "<h1>conversation</h1>" );
+			header.append( "<h1>conversation</h1>" );
 			stem += "re=" + re + "&";
 		}
 		if ( pop(tag) )
 		{
 			query.addFilterQuery("tag:" + tag);
 			stem += "tag=" + tag + "&";
-			out.println(
+			header.append(
 				"<h1>tag: " + tag + " <a href=\"http://twitter.com/hashtag/"
 				+ tag + "\"><img src=\"twitter.png\"/></a></h1>"
 			);
@@ -101,7 +83,7 @@ public class Search extends AbstractServlet
 		{
 			query.addFilterQuery("user_id:" + user);
 			stem += "user=" + user + "&";
-			out.println(
+			header.append(
 				"<h1>user: " + user + " <a href=\"http://twitter.com/" + user
 				+ "\"><img src=\"twitter.png\"/></a></h1>"
 			);
@@ -109,9 +91,9 @@ public class Search extends AbstractServlet
 		if ( q == null ) { q = ""; }
 		else { stem += "q=" + q + "&"; }
 		query.setQuery( q ); // null/blank?
-		out.println("<table id=\"header\"><tr><td id=\"search\">");
-		out.println("<form><input name=\"q\" value=\"" + q + "\"/>");
-		out.println("<input type=\"submit\" value=\"search\"/></form></td>");
+		header.append("<table id=\"header\"><tr><td id=\"search\">");
+		header.append("<form><input name=\"q\" value=\"" + q + "\"/>");
+		header.append("<input type=\"submit\" value=\"search\"/></form></td>");
 
 		SolrDocumentList results = null;
 		try
@@ -132,6 +114,41 @@ public class Search extends AbstractServlet
 			ex.printStackTrace();
 			results = null;
 		}
+
+		// set last-modified header
+		if ( results != null && results.size() > 0 )
+		{
+			res.setDateHeader( "Last-Modified",
+				((Date)results.get(0).getFirstValue("date")).getTime() );
+		}
+		else
+		{
+			res.setDateHeader( "Last-Modified", new Date().getTime() );
+		}
+
+		// setup output
+		PrintWriter out = null;
+		try
+		{
+			res.setContentType("text/html; charset=UTF-8");
+			out = res.getWriter();
+		}
+		catch ( Exception ex )
+		{
+			ex.printStackTrace();
+			return;
+		}
+
+		// start output
+		out.println("<html>");
+		out.println("<head>");
+		out.println("<link rel=\"stylesheet\" type=\"text/css\" "
+			+ "href=\"sisot.css\"></link>");
+		out.println("</head>");
+		out.println("<body>" );
+
+		// output header
+		out.println( header.toString() );
 
 		stem += "page=";
 		out.println("<td id=\"pager\">");
