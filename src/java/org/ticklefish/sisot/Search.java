@@ -209,6 +209,7 @@ public class Search extends AbstractServlet
 
     private static String format( SolrDocument doc )
     {
+		System.out.println("format(): " + doc.toString());
 		String userID    = (String)doc.getFirstValue("user_id");
 		String userName  = (String)doc.getFirstValue("user_name");
 		String userImage = (String)doc.getFirstValue("user_image");
