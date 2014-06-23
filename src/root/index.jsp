@@ -49,7 +49,7 @@ private static String tail( String s )
 {
   return s.matches(".*\\W$") ? s.substring(s.length() - 1) : "";
 }
-%>
+%><!DOCTYPE html>
 <html>
   <head>
     <title>sisot</title>
@@ -114,24 +114,28 @@ private static String tail( String s )
   String prev = pager.optString("prev");
   String next = pager.optString("next");
 %>
-<table id="header">
-  <tr>
-    <td id="search">
-      <form>
-        <input name="q" value="<%=q%>"/>
-        <input type="submit" value="search"/>
-      </form>
-    </td>
-    <td id="pager">
-      <% if ( !prev.equals("") ) { %><a href="<%=prev%>">prev</a><% } %>
-      <%= pager.optString("current") %>
-      <% if ( !next.equals("") ) { %><a href="<%=next%>">next</a><% } %>
-    </td>
-  </tr>
-</table>
-<table>
+  <table id="header">
+    <tr>
+      <td id="search">
+        <form>
+          <input name="q" value="<%=q%>"/>
+          <input type="submit" value="search"/>
+        </form>
+      </td>
+      <td id="pager">
+        <% if ( !prev.equals("") ) { %><a href="<%=prev%>">prev</a><% } %>
+        <%= pager.optString("current") %>
+        <% if ( !next.equals("") ) { %><a href="<%=next%>">next</a><% } %>
+      </td>
+    </tr>
+  </table>
+  <table>
 <%
   JSONArray tweets = json.getJSONArray("results");
+  if ( tweets.length() == 0 )
+  { %>
+    <p>no results found</p>
+  <% }
   for ( int i = 0; i < tweets.length(); i++ )
   {
     JSONObject t = tweets.getJSONObject(i); %>
@@ -152,15 +156,13 @@ private static String tail( String s )
         String replyTo = t.optString("re_id");
         if ( replyTo != null && !replyTo.equals("") && !replyTo.equals("-1") )
         { %>
-          <a href="?re=<%= replyTo %>">
-            <img src="conversation.png">
-          </a>
+          <a href="?re=<%= replyTo %>"><img src="conversation.png"/></a>
         <% }
 
         JSONArray media = t.optJSONArray("media");
         for ( int m = 0; media != null && m < media.length(); m++ )
         { %>
-          <a href="<%= media.getString(m) %>"/>
+          <a href="<%= media.getString(m) %>">
             <img width="48" height="48" src="<%= media.getString(m) %>"/>
           </a>
         <% }
@@ -171,5 +173,6 @@ private static String tail( String s )
   <%
   }
 %>
+    </table>
   </body>
 </html>
