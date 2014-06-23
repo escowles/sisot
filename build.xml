@@ -6,7 +6,6 @@
   <property name="root"    value="${src}/root"/>
   <property name="java"    value="${src}/java"/>
   <property name="lib"     value="${src}/lib"/>
-  <property name="dist"    value="${basedir}/dist"/>
   <property name="tmp"     value="${basedir}/tmp"/>
 
   <path id="classpath">
@@ -22,7 +21,6 @@
 
   <!-- prepare -->
   <target name="prepare" description="Create output directories.">
-    <mkdir dir="${dist}"/>
     <mkdir dir="${tmp}"/>
     <mkdir dir="${tmp}/classes"/>
   </target>
@@ -39,12 +37,9 @@
 
   <!-- build webapp -->
   <target name="webapp" description="Build WAR file" depends="compile">
-    <!-- move old war file out of the way -->
-    <move file="${dist}/${appName}.war" tofile="${dist}/${appName}.bak"
-      failonerror="false"/>
 
     <!-- generate new war file -->
-    <war destfile="${dist}/${appName}.war" webxml="${src}/web/web.xml">
+    <war destfile="${tmp}/${appName}.war" webxml="${src}/web/web.xml">
       <fileset dir="${root}"/>
       <classes dir="${tmp}/classes"/>
       <lib dir="${lib}">
@@ -55,8 +50,8 @@
 
   <!-- deploy webapp -->
   <target name="local-deploy" description="Deploy webapp to local dir">
-    <echo level="info" message="deploying ${dist}/${appName}.war"/>
-    <copy file="${dist}/${appName}.war" todir="${deploy.home}"/>
+    <echo level="info" message="deploying ${tmp}/${appName}.war"/>
+    <copy file="${tmp}/${appName}.war" todir="${deploy.home}"/>
   </target>
 
 </project>
