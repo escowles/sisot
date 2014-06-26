@@ -87,7 +87,14 @@ public class Indexer extends AbstractServlet implements Runnable
 	{
 		if ( solr == null )
 		{
-			res.sendRedirect("/config.html");
+			try
+			{
+				res.sendRedirect("/config.html");
+			}
+			catch ( Exception ex )
+			{
+				ex.printStackTrace();
+			}
 			return;
 		}
 

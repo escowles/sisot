@@ -104,7 +104,6 @@ private static String tail( String s )
 
   DefaultHttpClient client = new DefaultHttpClient();
   HttpResponse resp = client.execute( new HttpGet(url) );
-  System.out.println( "resp: " + resp.getStatusLine().getStatusCode());
   if ( resp.getStatusLine().getStatusCode() == 412 )
   {
     // not configured yet, redirect to indexer for setup

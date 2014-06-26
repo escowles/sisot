@@ -4,3 +4,5 @@ td { padding: 6px 3px; }
 #header { width: 100%; }
 #search { text-align: left; }
 #pager { text-align: right; vertical-align: top; }
+.label { font-weight: bold; width: 10em; display: inline-block;
+         text-align: right; margin-right: 1em; }
