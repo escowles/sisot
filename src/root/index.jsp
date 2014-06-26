@@ -90,12 +90,12 @@ private static String tail( String s )
     </h1>
   <% }
 
-  String url = request.getRequestURL().toString();
-  if ( url.endsWith("/index.jsp") )
+  String baseURL = request.getRequestURL().toString();
+  if ( baseURL.endsWith("/index.jsp") )
   {
-    url = url.substring(0, url.indexOf("/index.jsp") );
+    baseURL = baseURL.substring(0, baseURL.indexOf("/index.jsp") );
   }
-  url += "/searchJSON";
+  String url = baseURL + "searchJSON";
   if ( request.getQueryString() != null )
   {
     url += "?" + request.getQueryString();
@@ -104,6 +104,14 @@ private static String tail( String s )
 
   DefaultHttpClient client = new DefaultHttpClient();
   HttpResponse resp = client.execute( new HttpGet(url) );
+  System.out.println( "resp: " + resp.getStatusLine().getStatusCode());
+  if ( resp.getStatusLine().getStatusCode() == 412 )
+  {
+    // not configured yet, redirect to indexer for setup
+    System.out.println("redirecting to " + baseURL + "index");
+    response.sendRedirect(baseURL + "index");
+    return;
+  }
   String content = IOUtils.toString( resp.getEntity().getContent() );
 
   // parse and display...

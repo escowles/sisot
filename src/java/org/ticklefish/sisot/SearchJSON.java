@@ -44,7 +44,14 @@ public class SearchJSON extends AbstractServlet
 		// if not configured, show config form
 		if ( solr == null )
 		{
-			configForm(res); // TODO: return error message to prompt JSP
+			try
+			{
+				res.sendError( res.SC_PRECONDITION_FAILED );
+			}
+			catch ( Exception ex )
+			{
+				ex.printStackTrace();
+			}
 			return;
 		}
 

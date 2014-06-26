@@ -59,31 +59,6 @@ public abstract class AbstractServlet extends HttpServlet
 		}
 	}
 
-	protected void configForm( HttpServletResponse res )
-	{
-		// show config form
-		PrintWriter out = null;
-		try
-		{
-			out = res.getWriter();
-		}
-		catch ( IOException ex )
-		{
-			ex.printStackTrace();
-			return;
-		}
-
-		out.println("<html><body>");
-		out.println("<h1>sisot config</h1>");
-		out.println("<form action=\"\" method=\"POST\">");
-		out.println("<p>solr <input name=\"solr\"/></p>");
-		out.println("<p>api key <input name=\"api.key\"/></p>");
-		out.println("<p>api secret <input name=\"api.secret\"/></p>");
-		out.println("<p>access token <input name=\"access.token\"/></p>");
-		out.println("<p>access secret<input name=\"access.secret\"/></p>");
-		out.println("<p><input type=\"submit\" value=\"save\"/></p>");
-		out.println("</form></body></html>");
-	}
 	protected void doPost( HttpServletRequest req, HttpServletResponse res )
 	{
 		// write config file

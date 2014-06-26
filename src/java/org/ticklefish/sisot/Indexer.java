@@ -85,6 +85,12 @@ public class Indexer extends AbstractServlet implements Runnable
 
 	public void doGet( HttpServletRequest req, HttpServletResponse res )
 	{
+		if ( solr == null )
+		{
+			res.sendRedirect("/config.html");
+			return;
+		}
+
 		PrintWriter out = null;
 		try
 		{
