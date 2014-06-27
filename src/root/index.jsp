@@ -100,14 +100,12 @@ private static String tail( String s )
   {
     url += "?" + request.getQueryString();
   }
-  System.out.println("fetching URL: " + url);
 
   DefaultHttpClient client = new DefaultHttpClient();
   HttpResponse resp = client.execute( new HttpGet(url) );
   if ( resp.getStatusLine().getStatusCode() == 412 )
   {
     // not configured yet, redirect to indexer for setup
-    System.out.println("redirecting to " + baseURL + "index");
     response.sendRedirect(baseURL + "index");
     return;
   }

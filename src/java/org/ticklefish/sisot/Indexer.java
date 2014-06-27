@@ -89,7 +89,7 @@ public class Indexer extends AbstractServlet implements Runnable
 		{
 			try
 			{
-				res.sendRedirect("/config.html");
+				res.sendRedirect("config");
 			}
 			catch ( Exception ex )
 			{

@@ -8,6 +8,10 @@
   <display-name>sisot</display-name>
   <description>stuff i saw on twitter</description>
   <servlet>
+    <servlet-name>Config</servlet-name>
+    <servlet-class>org.ticklefish.sisot.Config</servlet-class>
+  </servlet>
+  <servlet>
     <servlet-name>Indexer</servlet-name>
     <servlet-class>org.ticklefish.sisot.Indexer</servlet-class>
     <load-on-startup>1</load-on-startup>
@@ -20,6 +24,10 @@
     <servlet-name>SearchJSON</servlet-name>
     <servlet-class>org.ticklefish.sisot.SearchJSON</servlet-class>
   </servlet>
+  <servlet-mapping>
+    <servlet-name>Config</servlet-name>
+    <url-pattern>/config</url-pattern>
+  </servlet-mapping>
   <servlet-mapping>
     <servlet-name>Indexer</servlet-name>
     <url-pattern>/index</url-pattern>

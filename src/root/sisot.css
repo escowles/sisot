@@ -6,3 +6,4 @@ td { padding: 6px 3px; }
 #pager { text-align: right; vertical-align: top; }
 .label { font-weight: bold; width: 10em; display: inline-block;
          text-align: right; margin-right: 1em; }
+input[type="text"] { width: 30em; }
