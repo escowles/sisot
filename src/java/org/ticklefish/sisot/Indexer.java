@@ -337,7 +337,7 @@ public class Indexer extends AbstractServlet implements Runnable
 
 		return doc;
 	}
-	private static String expandedText( Status status )
+	protected static String expandedText( Status status )
 	{
 		String s = status.getText();
 		URLEntity[] urls = status.getURLEntities();

@@ -2,6 +2,7 @@
 <project name="sisot" default="webapp" basedir=".">
   <property file="${user.home}/build.properties"/>
   <property name="appName" value="sisot"/>
+  <property name="data"    value="${basedir}/data"/>
   <property name="src"     value="${basedir}/src"/>
   <property name="root"    value="${src}/root"/>
   <property name="java"    value="${src}/java"/>
@@ -14,6 +15,13 @@
     </fileset>
   </path>
 
+  <path id="exec">
+    <fileset dir="${lib}">
+      <include name="*.jar"/>
+    </fileset>
+    <pathelement location="${tmp}/classes"/>
+  </path>
+
   <!-- remove temp files -->
   <target name="clean" description="Delete generated directories">
     <delete dir="${tmp}"/>
@@ -22,6 +30,7 @@
   <!-- prepare -->
   <target name="prepare" description="Create output directories.">
     <mkdir dir="${tmp}"/>
+    <mkdir dir="${data}"/>
     <mkdir dir="${tmp}/classes"/>
   </target>
 
@@ -52,6 +61,21 @@
   <target name="local-deploy" description="Deploy webapp to local dir">
     <echo level="info" message="deploying ${tmp}/${appName}.war"/>
     <copy file="${tmp}/${appName}.war" todir="${deploy.home}"/>
+  </target>
+
+  <target name="list" description="List tweets" depends="compile">
+    <echo level="info" message="sisot.config: ${sisot.config}"/>
+    <java classname="org.ticklefish.sisot.Lister" classpathref="exec">
+      <arg line="${sisot.config}"/>
+      <arg line="${data}"/>
+    </java>
+  </target>
+  <target name="fetch" description="Fetch tweets" depends="compile">
+    <echo level="info" message="sisot.config: ${sisot.config}"/>
+    <java classname="org.ticklefish.sisot.Fetcher" classpathref="exec">
+      <arg line="${sisot.config}"/>
+      <arg line="${data}"/>
+    </java>
   </target>
 
 </project>
