@@ -55,7 +55,7 @@ public class SolrIndexer extends AbstractServlet implements Runnable
 
         // schedule execution
         ScheduledExecutorService exec = new ScheduledThreadPoolExecutor(1);
-        exec.scheduleWithFixedDelay(this, 0, 30, TimeUnit.MINUTES);
+        exec.scheduleWithFixedDelay(this, 0, 20, TimeUnit.MINUTES);
 	}
 	protected void init( Properties props )
 	{
@@ -72,6 +72,70 @@ public class SolrIndexer extends AbstractServlet implements Runnable
             return;
         }
 
+		index(last(), new PrintWriter(System.out));
+	}
+
+	public void doGet( HttpServletRequest req, HttpServletResponse res )
+	{
+		// if we're not configured, redirect to config form
+		if ( solr == null )
+		{
+			try
+			{
+				res.sendRedirect("config");
+			}
+			catch ( Exception ex )
+			{
+				ex.printStackTrace();
+			}
+			return;
+		}
+
+		// setup output
+		PrintWriter out = null;
+		try
+		{
+			res.setContentType("text/html");
+			out = res.getWriter();
+		}
+		catch ( Exception ex )
+		{
+			ex.printStackTrace();
+			return;
+		}
+
+		// output html header
+		out.println("<html>");
+		out.println("<head>");
+		out.println("<link rel=\"stylesheet\" href=\"sisot.css\"></link>");
+		out.println("</head>");
+		out.println("<body>");
+		out.println("<h1>indexer</h1>");
+		out.println("<form method=\"GET\">");
+		out.println("<input type=\"submit\" name=\"reindex\" value=\"reindex all records\"/>");
+		out.println("<input type=\"submit\" value=\"index new records\"/>");
+		out.println("</form>");
+		out.println("<pre>");
+		out.println("reindexing");
+		out.flush();
+
+		// check reindex parameter to trigger full reindex
+		String last = null;
+		String reindex = req.getParameter("reindex");
+		if ( reindex == null || reindex.trim().equals("") )
+		{
+			last = last();
+		}
+		index(last, out);
+
+		// finish output
+		out.println("</pre>");
+		out.println("</body></html>");
+		out.flush();
+	}
+
+	private String last()
+	{
 		// get last tweet id
         String last = "";
         try
@@ -91,43 +155,7 @@ public class SolrIndexer extends AbstractServlet implements Runnable
         {
             ex.printStackTrace();
         }
-
-		index(last, new PrintWriter(System.out));
-	}
-
-	public void doGet( HttpServletRequest req, HttpServletResponse res )
-	{
-		if ( solr == null )
-		{
-			try
-			{
-				res.sendRedirect("config");
-			}
-			catch ( Exception ex )
-			{
-				ex.printStackTrace();
-			}
-			return;
-		}
-
-		PrintWriter out = null;
-		try
-		{
-			res.setContentType("text/plain");
-			out = res.getWriter();
-		}
-		catch ( Exception ex )
-		{
-			ex.printStackTrace();
-			return;
-		}
-
-		int records = 0;
-		out.println("reindexing");
-		out.flush();
-
-		index(null, out);
-		out.flush();
+		return last;
 	}
 
 	private void index( String since, PrintWriter out )
