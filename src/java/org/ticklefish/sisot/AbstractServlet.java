@@ -68,6 +68,7 @@ public abstract class AbstractServlet extends HttpServlet
 		props.put("api.secret",    req.getParameter("api.secret")    );
 		props.put("access.token",  req.getParameter("access.token")  );
 		props.put("access.secret", req.getParameter("access.secret") );
+		props.put("data.dir",      req.getParameter("data.dir")      );
 		init(props);
 
 		String error = null;

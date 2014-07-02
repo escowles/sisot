@@ -23,6 +23,7 @@ import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
 import twitter4j.HashtagEntity;
 import twitter4j.MediaEntity;
+import twitter4j.URLEntity;
 
 import org.json.JSONObject;
 
@@ -158,7 +159,7 @@ public class Fetcher
 		JSONObject json = new JSONObject();
 		json.put("id",         tweet.getId() );
 		json.put("re_id",      tweet.getInReplyToStatusId() );
-		json.put("text",       Indexer.expandedText(tweet) );
+		json.put("text",       expandedText(tweet) );
 		json.put("date",       tweet.getCreatedAt() );
 		json.put("user_id",    tweet.getUser().getScreenName() );
 		json.put("user_name",  tweet.getUser().getName() );
@@ -184,6 +185,17 @@ public class Fetcher
 
 		return json.toString();
 	}
+    private static String expandedText( Status status )
+    {
+        String s = status.getText();
+        URLEntity[] urls = status.getURLEntities();
+        for ( int i = 0; i < urls.length; i++ )
+        {
+            URLEntity url = urls[i];
+            s = s.replace( url.getURL(), url.getExpandedURL() );
+        }
+        return s;
+    }
 
 	public static void main( String[] args ) throws Exception
 	{

@@ -46,11 +46,12 @@ public class Config extends AbstractServlet
 		out.println("    <h1>sisot config</h1>");
 		out.println("    <form action=\"\" method=\"POST\">");
 
-		field( "solr",          "solr",          out );
-		field( "api key",       "api.key",       out );
-		field( "api secret",    "api.secret",    out );
-		field( "access token",  "access.token",  out );
-		field( "access secret", "access.secret", out );
+		field( "solr",           "solr",          out );
+		field( "data directory", "data.dir",      out );
+		field( "api key",        "api.key",       out );
+		field( "api secret",     "api.secret",    out );
+		field( "access token",   "access.token",  out );
+		field( "access secret",  "access.secret", out );
 
 		out.println("      <p><span class=\"label\"></span>");
 		out.println("         <input type=\"submit\" value=\"save\"/></p>");
@@ -72,6 +73,7 @@ public class Config extends AbstractServlet
 		// write config file
 		props = new Properties();
 		props.put("solr",          req.getParameter("solr")          );
+		props.put("data.dir",      req.getParameter("data.dir")      );
 		props.put("api.key",       req.getParameter("api.key")       );
 		props.put("api.secret",    req.getParameter("api.secret")    );
 		props.put("access.token",  req.getParameter("access.token")  );

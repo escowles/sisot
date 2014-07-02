@@ -12,8 +12,8 @@
     <servlet-class>org.ticklefish.sisot.Config</servlet-class>
   </servlet>
   <servlet>
-    <servlet-name>Indexer</servlet-name>
-    <servlet-class>org.ticklefish.sisot.Indexer</servlet-class>
+    <servlet-name>SolrIndexer</servlet-name>
+    <servlet-class>org.ticklefish.sisot.SolrIndexer</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet>
@@ -29,7 +29,7 @@
     <url-pattern>/config</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>Indexer</servlet-name>
+    <servlet-name>SolrIndexer</servlet-name>
     <url-pattern>/index</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
