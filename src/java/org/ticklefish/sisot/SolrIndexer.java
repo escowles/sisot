@@ -47,6 +47,7 @@ public class SolrIndexer extends AbstractServlet implements Runnable
 	);
 	private SimpleDateFormat localFormat = new SimpleDateFormat("MM/dd HH:mm");
 	private File dir;
+    ScheduledExecutorService exec;
 	public void init( ServletConfig cfg )
 	{
 		super.init(cfg);
@@ -54,13 +55,20 @@ public class SolrIndexer extends AbstractServlet implements Runnable
 		utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         // schedule execution
-        ScheduledExecutorService exec = new ScheduledThreadPoolExecutor(1);
+        exec = new ScheduledThreadPoolExecutor(1);
         exec.scheduleWithFixedDelay(this, 0, 20, TimeUnit.MINUTES);
+		System.out.println("SolrIndexer: scheduled to run every 20 minutes");
 	}
 	protected void init( Properties props )
 	{
 		super.init(props);
 		dir = new File( props.getProperty("data.dir") );
+	}
+
+	public void destroy()
+	{
+		exec.shutdown();
+		exec.shutdownNow();
 	}
 
 	public void run()
@@ -160,6 +168,7 @@ public class SolrIndexer extends AbstractServlet implements Runnable
 
 	private void index( String since, PrintWriter out )
 	{
+		out.println("SolrIndexer.index(" + since + ")");
 		int records = 0;
 		try
 		{
