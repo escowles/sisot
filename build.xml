@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="sisot" default="webapp" basedir=".">
+<project name="sisot" default="compile" basedir=".">
   <property file="${user.home}/build.properties"/>
   <property name="appName" value="sisot"/>
   <property name="data"    value="${basedir}/data"/>
@@ -29,8 +29,8 @@
 
   <!-- prepare -->
   <target name="prepare" description="Create output directories.">
-    <mkdir dir="${tmp}"/>
     <mkdir dir="${data}"/>
+    <mkdir dir="${tmp}"/>
     <mkdir dir="${tmp}/classes"/>
   </target>
 
@@ -42,25 +42,6 @@
         includeantruntime="false" source="1.7" target="1.7">
       <classpath refid="classpath"/>
     </javac>
-  </target>
-
-  <!-- build webapp -->
-  <target name="webapp" description="Build WAR file" depends="compile">
-
-    <!-- generate new war file -->
-    <war destfile="${tmp}/${appName}.war" webxml="${src}/web/web.xml">
-      <fileset dir="${root}"/>
-      <classes dir="${tmp}/classes"/>
-      <lib dir="${lib}">
-        <exclude name="servlet-1.6.jar"/>
-      </lib>
-    </war>
-  </target>
-
-  <!-- deploy webapp -->
-  <target name="local-deploy" description="Deploy webapp to local dir">
-    <echo level="info" message="deploying ${tmp}/${appName}.war"/>
-    <copy file="${tmp}/${appName}.war" todir="${deploy.home}"/>
   </target>
 
   <target name="list" description="List tweets" depends="compile">
