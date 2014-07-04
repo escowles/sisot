@@ -67,27 +67,18 @@
     <echo level="info" message="sisot.config: ${sisot.config}"/>
     <java classname="org.ticklefish.sisot.Lister" classpathref="exec">
       <arg line="${sisot.config}"/>
-      <arg line="${data}"/>
     </java>
   </target>
   <target name="fetch" description="Fetch tweets" depends="compile">
     <echo level="info" message="sisot.config: ${sisot.config}"/>
     <java classname="org.ticklefish.sisot.Fetcher" classpathref="exec">
       <arg line="${sisot.config}"/>
-      <arg line="${data}"/>
     </java>
   </target>
-  <target name="index" description="Index new tweets" depends="compile">
+  <target name="press" description="Post tweets to Wordpress" depends="compile">
     <echo level="info" message="sisot.config: ${sisot.config}"/>
-    <java classname="org.ticklefish.sisot.SolrIndexer" classpathref="exec">
+    <java classname="org.ticklefish.sisot.Presser" classpathref="exec">
       <arg line="${sisot.config}"/>
-    </java>
-  </target>
-  <target name="reindex" description="Reindex all tweets" depends="compile">
-    <echo level="info" message="sisot.config: ${sisot.config}"/>
-    <java classname="org.ticklefish.sisot.SolrIndexer" classpathref="exec">
-      <arg line="${sisot.config}"/>
-      <arg line="reindex"/>
     </java>
   </target>
 

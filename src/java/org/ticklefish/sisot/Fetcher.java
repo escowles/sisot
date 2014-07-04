@@ -37,11 +37,9 @@ public class Fetcher
 {
 	private static SimpleDateFormat dfmt = new SimpleDateFormat("MM/dd HH:mm");
 
-	private static Twitter twitter( File configFile ) throws Exception
+	private static Twitter twitter( Properties props ) throws Exception
 	{
 		// load config
-		Properties props = new Properties();
-		props.load( new FileInputStream(configFile) );
 		String apiKey    = props.getProperty("api.key");
 		String apiSecret = props.getProperty("api.secret");
 		String accToken  = props.getProperty("access.token");
@@ -199,8 +197,10 @@ public class Fetcher
 
 	public static void main( String[] args ) throws Exception
 	{
-		Twitter twitter = twitter( new File(args[0]) );
-		File dir = new File(args[1]);
+		Properties props = new Properties();
+		props.load( new FileInputStream(args[0]) );
+		Twitter twitter = twitter( props );
+		File dir = new File( props.getProperty("data.dir") );
 		fetch( twitter, dir );
 	}
 }
