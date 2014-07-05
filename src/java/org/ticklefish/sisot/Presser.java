@@ -56,11 +56,21 @@ public class Presser
 				records++;
 				System.out.println( records + ": " + id );
 				JSONObject tweet = parse( f );
-				post( wp, tweet );
 
-				// move file
-				File wpFile = new File( dir, id + ".wp" );
-				f.renameTo( wpFile );
+				try
+				{
+					post( wp, tweet );
+
+					// move file
+					File wpFile = new File( dir, id + ".wp" );
+					f.renameTo( wpFile );
+				}
+				catch ( Exception ex )
+				{
+					System.out.println("Exception: " + ex.toString());
+					File errFile = new File( dir, id + ".err" );
+					f.renameTo( errFile );
+				}
 			}
 		}
 		System.out.println("posted " + records + " tweets");
