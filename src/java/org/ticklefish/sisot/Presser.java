@@ -6,13 +6,17 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import redstone.xmlrpc.XmlRpcFault;
 
 import net.bican.wordpress.Page;
 import net.bican.wordpress.PageDefinition;
 import net.bican.wordpress.Wordpress;
+import redstone.xmlrpc.XmlRpcArray;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -25,6 +29,13 @@ import org.json.JSONObject;
 **/
 public class Presser
 {
+	private static SimpleDateFormat fmt1 = new SimpleDateFormat(
+		"EEE MMM dd HH:mm:ss z yyyy"
+	);
+	private static SimpleDateFormat fmt2 = new SimpleDateFormat(
+		"MM/dd/yyyy HH:mm:ss z"
+	);
+
 	private static void press( Properties props ) throws Exception
 	{
 		File dir = new File(props.getProperty("data.dir"));
@@ -68,19 +79,21 @@ public class Presser
 		throws Exception
 	{
         Page p = new Page();
-        p.setTitle( tweet.getString("date") );
+		Date d = fmt1.parse( tweet.getString("date") );
+		p.setDateCreated(d);
+        p.setTitle( fmt2.format(d) );
 
 		StringBuffer desc = new StringBuffer();
 		desc.append("<table>\n<tr>\n");
-        desc.append("<td><a href=\"http://twitter.com/" + tweet.getString("user_id") + "\">");
+        desc.append("<td><a href=\"/sisot/user/" + tweet.getString("user_id") + "\">");
 		desc.append("<img src=\"" + tweet.getString("user_image") + "\"></a></td>\n");
-        desc.append("<td><a href=\"http://twitter.com/" + tweet.getString("user_id") + "\">");
+        desc.append("<td><a href=\"/sisot/user/" + tweet.getString("user_id") + "\">");
 		desc.append(tweet.getString("user_name") + "</a>:<br/>");
-        desc.append(linkify(tweet.getString("text")) + "\n");
+        desc.append(linkify(tweet.getString("text")));
 
 		// media
 		JSONArray media = tweet.getJSONArray("media");
-		if ( media.length() > 0 ) { desc.append("<br/>\n"); }
+		if ( media.length() > 0 ) { desc.append("<br/>"); }
 		for ( int i = 0; i < media.length(); i++ )
 		{
 			desc.append("<a href=\"" + media.getString(i) + "\">");
@@ -92,11 +105,10 @@ public class Presser
 
 		// tags
 		JSONArray tagArr = tweet.getJSONArray("tags");
-		String tags = "";
+		String tags = tweet.getString("user_id");
 		for ( int i = 0; i < tagArr.length(); i++ )
 		{
-			tags += tagArr.getString(i);
-			if ( (i+1) < tagArr.length() ) { tags += ","; }
+			tags += "," + tagArr.getString(i);
 		}
         p.setMt_keywords(tags);
 
@@ -111,12 +123,12 @@ public class Presser
 		{
 			if ( words[i].startsWith("@") || words[i].startsWith(".@") )
 			{
-				String link = "http://twitter.com/" + words[i].substring(words[i].indexOf("@")+1);
+				String link = "/sisot/user/" + words[i].substring(words[i].indexOf("@")+1);
 				buf.append( linkTo(link, words[i]) );
 			}
 			else if ( words[i].startsWith("#") )
 			{
-				String link = "tweet/tag/" + words[i].substring(1);
+				String link = "/sisot/tag/" + words[i].substring(1);
 				buf.append( linkTo(link, words[i]) );
 			}
 			else if ( words[i].startsWith("http://")
@@ -147,6 +159,8 @@ public class Presser
 
 	public static void main( String[] args ) throws Exception
 	{
+		fmt2.setTimeZone( TimeZone.getTimeZone("America/New_York") );
+
 		Properties props = new Properties();
 		props.load( new FileInputStream(args[0]) );
 		press( props );
