@@ -98,8 +98,9 @@ public class Lister
 				{
 					long id = status.getId();
 					File idFile = new File( dir, id + ".id" );
-					File jsonFile = new File( dir, id + ".json" );
-					if ( !idFile.exists() && !jsonFile.exists() )
+					File json = new File( dir, id + ".json" );
+					File wp = new File( dir, id + ".wp" );
+					if ( !idFile.exists() && !json.exists() && !wp.exists() )
 					{
 						records++;
 						System.out.println( records + ": " + id);
