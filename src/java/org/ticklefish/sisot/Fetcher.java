@@ -157,11 +157,23 @@ public class Fetcher
 		JSONObject json = new JSONObject();
 		json.put("id",         tweet.getId() );
 		json.put("re_id",      tweet.getInReplyToStatusId() );
-		json.put("text",       expandedText(tweet) );
 		json.put("date",       tweet.getCreatedAt() );
 		json.put("user_id",    tweet.getUser().getScreenName() );
 		json.put("user_name",  tweet.getUser().getName() );
 		json.put("user_image", tweet.getUser().getProfileImageURL() );
+
+		if ( tweet.isRetweet() )
+		{
+			// use original tweet's text so links aren't truncated
+			System.out.println("RT " + tweet.getId());
+			Status rt = tweet.getRetweetedStatus();
+			json.put( "text", "RT @" + rt.getUser().getScreenName()
+				+ ": " + expandedText(rt) );
+		}
+		else
+		{
+			json.put("text",       expandedText(tweet) );
+		}
 
 		// hashtags
         HashtagEntity[] tags = tweet.getHashtagEntities();
