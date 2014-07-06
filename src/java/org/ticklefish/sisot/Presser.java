@@ -73,7 +73,6 @@ public class Presser
 				}
 			}
 		}
-		System.out.println("posted " + records + " tweets");
 	}
 	private static JSONObject parse( File f ) throws Exception
 	{
@@ -123,7 +122,6 @@ public class Presser
         p.setMt_keywords(tags);
 
         String id = wp.newPost(p, true);
-		System.out.println("posted: " + id);
 	}
 	private static String linkify( String s )
 	{
