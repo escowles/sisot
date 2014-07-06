@@ -95,9 +95,9 @@ public class Presser
 
 		StringBuffer desc = new StringBuffer();
 		desc.append("<table>\n<tr>\n");
-        desc.append("<td><a href=\"/sisot/user/" + tweet.getString("user_id") + "\">");
+        desc.append("<td><a href=\"/sisot/tag/" + tweet.getString("user_id") + "\">");
 		desc.append("<img src=\"" + tweet.getString("user_image") + "\"></a></td>\n");
-        desc.append("<td><a href=\"/sisot/user/" + tweet.getString("user_id") + "\">");
+        desc.append("<td><a href=\"/sisot/tag/" + tweet.getString("user_id") + "\">");
 		desc.append(tweet.getString("user_name") + "</a>:<br/>");
         desc.append(linkify(tweet.getString("text")));
 
@@ -133,7 +133,7 @@ public class Presser
 		{
 			if ( words[i].startsWith("@") || words[i].startsWith(".@") )
 			{
-				String link = "/sisot/user/" + words[i].substring(words[i].indexOf("@")+1);
+				String link = "/sisot/tag/" + words[i].substring(words[i].indexOf("@")+1);
 				buf.append( linkTo(link, words[i]) );
 			}
 			else if ( words[i].startsWith("#") )
