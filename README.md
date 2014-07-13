@@ -25,7 +25,7 @@ setup
 	$ git clone git@github.com:escowles/sisot.git
 	```
 
-2. setup sisot/build.properties with path to data directory
+2. setup `sisot/build.properties` with path to data directory
 
 	```
 	sisot=/path/to/sisot
@@ -43,17 +43,17 @@ setup
 	$ /path/to/sisot/sisot.sh
 	```
 
-5. crontab...
+5. run periodically with crontab
 
-	* sisot-cron.sh:
+	* create a script that sets java path and executes sisot.sh called (e.g.) `sisot-cron.sh`:
 
 	``` sh
 	#!/bin/sh
 	export PATH=$HOME/java/bin:$PATH
-	$HOME/export/sisot/sisot.sh
+	/path/to/sisot/sisot.sh
 	```
 
-	* crontab -e:
+	* edit crontab with `crontab -e` to run `sisot-cron.sh`:
 
 	``` sh
 	0,10,20,30,40,50 * * * * /path/to/sisot-cron.sh >> /path/to/sisot/sisot.log
