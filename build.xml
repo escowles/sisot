@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <project name="sisot" default="compile" basedir=".">
-  <property file="${user.home}/build.properties"/>
+  <property file="${basedir}/build.properties"/>
   <property name="appName" value="sisot"/>
   <property name="data"    value="${basedir}/data"/>
   <property name="src"     value="${basedir}/src"/>
-  <property name="root"    value="${src}/root"/>
   <property name="java"    value="${src}/java"/>
+  <property name="sh"      value="${src}/sh"/>
   <property name="lib"     value="${src}/lib"/>
   <property name="tmp"     value="${basedir}/tmp"/>
 
@@ -44,23 +44,24 @@
     </javac>
   </target>
 
-  <target name="list" description="List tweets" depends="compile">
-    <echo level="info" message="sisot.config: ${sisot.config}"/>
-    <java classname="org.ticklefish.sisot.Lister" classpathref="exec">
-      <arg line="${sisot.config}"/>
-    </java>
-  </target>
-  <target name="fetch" description="Fetch tweets" depends="compile">
-    <echo level="info" message="sisot.config: ${sisot.config}"/>
-    <java classname="org.ticklefish.sisot.Fetcher" classpathref="exec">
-      <arg line="${sisot.config}"/>
-    </java>
-  </target>
-  <target name="press" description="Post tweets to Wordpress" depends="compile">
-    <echo level="info" message="sisot.config: ${sisot.config}"/>
-    <java classname="org.ticklefish.sisot.Presser" classpathref="exec">
-      <arg line="${sisot.config}"/>
-    </java>
+  <!-- install -->
+  <target name="install" description="Setup sisot dir" depends="compile">
+    <mkdir dir="${sisot}"/>
+    <mkdir dir="${sisot}/lib"/>
+
+    <!-- jar up classes -->
+    <jar destfile="${sisot}/lib/sisot.jar" basedir="${tmp}/classes"/>
+
+    <!-- copy libs and scripts -->
+    <copy todir="${sisot}/lib">
+      <fileset dir="${lib}"/>
+    </copy>
+    <copy todir="${sisot}">
+      <fileset dir="${sh}"/>
+    </copy>
+
+    <!-- make sisot.sh executable -->
+    <chmod dir="${sisot}" perm="ugo+rx" includes="*.sh"/>
   </target>
 
 </project>

@@ -123,7 +123,9 @@ public class Fetcher
 							}
 							else
 							{
-								inner.printStackTrace();
+								System.out.println("Error: " + id);
+								File errFile = new File( dir, id + ".err" );
+								f.renameTo( errFile );
 							}
 						}
 					}

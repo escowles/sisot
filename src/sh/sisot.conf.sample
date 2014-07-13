@@ -1,0 +1,13 @@
+#sisot configuration
+#Thu Jun 26 20:05:29 EDT 2014
+# twitter api keys
+api.key=XXXXXXXXXXXXXXXXXXXXXX
+access.token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+api.secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+access.secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# wp credentials
+wp.user=admin
+wp.pass=XXXXXXXXX
+wp.url=http://example.com/wordpress/xmlrpc.php
+# local dir for storing files
+data.dir=/path/to/sisot/data
