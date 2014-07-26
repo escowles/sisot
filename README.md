@@ -1,7 +1,21 @@
 sisot (stuff i saw on twitter)
 ========
 
-* retrieves tweets from your timeline and posts them to wordpress
+retrieves tweets from your timeline and posts them to wordpress
+
+i was tired of trying to find something i had seen on twitter recently,
+dealing with the inadequate twitter search options i could find.  so i tried
+a couple of different strategies, but settled on fetching tweets and posting
+them to a wordpress blog, which has a couple of advantages that are important
+(to me at least):
+
+1. first and foremost, it provides decent search functionality with minimal
+   code.
+2. also important, everything can easily run in a shared hosting account,
+   so it can continue chugging along when my computer is off, when i'm
+   traveling, etc.
+3. wordpress has tons of options to handle formatting, making content private,
+   etc.
 
 dependencies
 ------------

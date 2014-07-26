@@ -51,6 +51,7 @@
 
     <!-- jar up classes -->
     <jar destfile="${sisot.dir}/lib/sisot.jar" basedir="${tmp}/classes"/>
+    <copy file="${basedir}/LICENSE.md" tofile="${sisot.dir}/lib/sisot.txt"/>
 
     <!-- copy libs and scripts -->
     <copy todir="${sisot.dir}/lib">
