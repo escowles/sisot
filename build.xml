@@ -46,22 +46,22 @@
 
   <!-- install -->
   <target name="install" description="Setup sisot dir" depends="compile">
-    <mkdir dir="${sisot}"/>
-    <mkdir dir="${sisot}/lib"/>
+    <mkdir dir="${sisot.dir}"/>
+    <mkdir dir="${sisot.dir}/lib"/>
 
     <!-- jar up classes -->
-    <jar destfile="${sisot}/lib/sisot.jar" basedir="${tmp}/classes"/>
+    <jar destfile="${sisot.dir}/lib/sisot.jar" basedir="${tmp}/classes"/>
 
     <!-- copy libs and scripts -->
-    <copy todir="${sisot}/lib">
+    <copy todir="${sisot.dir}/lib">
       <fileset dir="${lib}"/>
     </copy>
-    <copy todir="${sisot}">
+    <copy todir="${sisot.dir}">
       <fileset dir="${sh}"/>
     </copy>
 
     <!-- make sisot.sh executable -->
-    <chmod dir="${sisot}" perm="ugo+rx" includes="*.sh"/>
+    <chmod dir="${sisot.dir}" perm="ugo+rx" includes="*.sh"/>
   </target>
 
 </project>

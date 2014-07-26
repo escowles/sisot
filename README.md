@@ -3,18 +3,18 @@ sisot (stuff i saw on twitter)
 
 * retrieves tweets from your timeline and posts them to wordpress
 
-bundled dependencies
---------------------
-* [org.json](http://json.org/java/)
-* [twitter4j 4.0.1](http://twitter4j.org/en/index.html)
-* [wordpress-java 0.5.1](https://code.google.com/p/wordpress-java/)
-* [xmlrpc-client 1.1.1](http://ws.apache.org/xmlrpc/)
-
 dependencies
 ------------
 * [wordpress](https://wordpress.org/download/)
 * [jdk 1.7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html)
 * [ant](http://ant.apache.org/bindownload.cgi)
+
+bundled libraries
+--------------------
+* [org.json](http://json.org/java/)
+* [twitter4j 4.0.1](http://twitter4j.org/en/index.html)
+* [wordpress-java 0.5.1](https://code.google.com/p/wordpress-java/)
+* [xmlrpc-client 1.1.1](http://ws.apache.org/xmlrpc/)
 
 setup
 -----
@@ -28,7 +28,7 @@ setup
 2. setup `sisot/build.properties` with path to data directory
 
 	```
-	sisot=/path/to/sisot
+	sisot.dir=/path/to/sisot
 	```
 
 3. build
@@ -37,15 +37,17 @@ setup
 	$ ant install
 	```
 
-4. run
+4. create twitter access tokens (see https://dev.twitter.com/docs/auth/tokens-devtwittercom) and update sisot.conf with your api keys and wordpress credentials.
+
+5. run
 
 	``` sh
 	$ /path/to/sisot/sisot.sh
 	```
 
-5. run periodically with crontab
+6. run periodically with crontab
 
-	* create a script that sets java path and executes sisot.sh called (e.g.) `sisot-cron.sh`:
+	* you may need to create a script that sets java path and executes sisot.sh called (e.g.) `sisot-cron.sh`:
 
 	``` sh
 	#!/bin/sh
@@ -53,7 +55,7 @@ setup
 	/path/to/sisot/sisot.sh
 	```
 
-	* edit crontab with `crontab -e` to run `sisot-cron.sh`:
+	* edit crontab with `crontab -e` and add an entry to run `sisot-cron.sh` every 10 minutes:
 
 	``` sh
 	0,10,20,30,40,50 * * * * /path/to/sisot-cron.sh >> /path/to/sisot/sisot.log

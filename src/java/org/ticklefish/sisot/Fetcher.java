@@ -82,6 +82,27 @@ public class Fetcher
 		return limit;
 	}
 
+	private static String fetch( Twitter twitter, long id )
+		throws TwitterException
+	{
+		try
+		{
+			Status tweet = twitter.showStatus(id);
+			return json(tweet);
+		}
+		catch ( TwitterException ex )
+		{
+			if ( ex.exceededRateLimitation() )
+			{
+				throw ex;
+			}
+			else if ( ex.getStatusCode() == 404 )
+			{
+				System.err.println("Not Found: " + id);
+			}
+		}
+		return null;
+	}
 	private static void fetch( Twitter twitter, File dir ) throws IOException
 	{
 		try
@@ -103,30 +124,22 @@ public class Fetcher
 					File jsonFile = new File( dir, id + ".json" );
 					if ( !jsonFile.exists() )
 					{
-						try
+						records++;
+						System.out.println( records + ": " + id );
+						
+						String json = fetch( twitter, Long.parseLong(id) );
+						if ( json != null )
 						{
-							records++;
-							System.out.println( records + ": " + id );
-							Status tweet = twitter.showStatus(
-								Long.parseLong(id)
-							);
 							FileWriter fw = new FileWriter( jsonFile );
-							fw.write( json(tweet) );
+							fw.write( json );
 							fw.close();
 							f.delete();
 						}
-						catch ( TwitterException inner )
+						else
 						{
-							if ( inner.exceededRateLimitation() )
-							{
-								throw inner;
-							}
-							else
-							{
-								System.out.println("Error: " + id);
-								File errFile = new File( dir, id + ".err" );
-								f.renameTo( errFile );
-							}
+							System.out.println("Error: " + id);
+							File errFile = new File( dir, id + ".err" );
+							f.renameTo( errFile );
 						}
 					}
 				}
@@ -214,7 +227,22 @@ public class Fetcher
 		Properties props = new Properties();
 		props.load( new FileInputStream(args[0]) );
 		Twitter twitter = twitter( props );
-		File dir = new File( props.getProperty("data.dir") );
-		fetch( twitter, dir );
+
+		if ( args.length > 1 && args[1] != null )
+		{
+			try
+			{
+				System.out.println( fetch(twitter, Long.parseLong(args[1])) );
+			}
+			catch ( Exception ex )
+			{
+				ex.printStackTrace();
+			}
+		}
+		else
+		{
+			File dir = new File( props.getProperty("data.dir") );
+			fetch( twitter, dir );
+		}
 	}
 }
