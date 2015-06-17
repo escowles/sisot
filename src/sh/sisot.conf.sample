@@ -5,9 +5,7 @@ api.key=XXXXXXXXXXXXXXXXXXXXXX
 access.token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 api.secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 access.secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-# wp credentials
-wp.user=admin
-wp.pass=XXXXXXXXX
-wp.url=http://example.com/wordpress/xmlrpc.php
 # local dir for storing files
 data.dir=/path/to/sisot/data
+# solr base url
+solr.base=http://localhost:8080/solr/sisot

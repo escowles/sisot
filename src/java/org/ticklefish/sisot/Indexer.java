@@ -11,39 +11,36 @@ import java.util.Date;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import redstone.xmlrpc.XmlRpcFault;
-
-import net.bican.wordpress.Page;
-import net.bican.wordpress.PageDefinition;
-import net.bican.wordpress.Wordpress;
-import redstone.xmlrpc.XmlRpcArray;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.impl.ConcurrentUpdateSolrServer;
+import org.apache.solr.common.SolrInputDocument;
+
 /**
- * Post tweets to Wordpress
+ * Index tweets in Solr.
  *
  * @author escowles
- * @since 2014-07-03
+ * @since 2015-06-14
 **/
-public class Presser
+public class Indexer
 {
 	private static SimpleDateFormat fmt1 = new SimpleDateFormat(
 		"EEE MMM dd HH:mm:ss z yyyy"
 	);
 	private static SimpleDateFormat fmt2 = new SimpleDateFormat(
-		"MM/dd/yyyy HH:mm:ss z"
+		"yyyy-MM-dd'T'HH:mm:ss'Z'"
 	);
 
 	private static void press( Properties props ) throws Exception
 	{
 		File dir = new File(props.getProperty("data.dir"));
 
-		String username = props.getProperty("wp.user");
-		String password = props.getProperty("wp.pass");
-		String xmlrpcURL = props.getProperty("wp.url");
-		Wordpress wp = new Wordpress( username, password, xmlrpcURL );
+		String solrBase = props.getProperty("solr.base");
+		int queue = 20;
+		int threads = 3;
+		SolrServer solr = new ConcurrentUpdateSolrServer(solrBase, queue, threads);
 
 		int records = 0;
 		File[] files = dir.listFiles();
@@ -54,12 +51,13 @@ public class Presser
 			{
 				String id = f.getName().replaceAll(".json","");
 				records++;
-				System.out.println( records + ": " + id );
-				JSONObject tweet = parse( f );
 
 				try
 				{
-					post( wp, tweet );
+					System.out.println( records + ": " + id );
+					JSONObject tweet = parse( f );
+
+					index( solr, tweet );
 
 					// move file
 					File wpFile = new File( dir, id + ".wp" );
@@ -68,6 +66,7 @@ public class Presser
 				catch ( Exception ex )
 				{
 					System.out.println("Exception: " + ex.toString());
+					ex.printStackTrace();
 					File errFile = new File( dir, id + ".err" );
 					f.renameTo( errFile );
 				}
@@ -84,44 +83,37 @@ public class Presser
 		}
 		return new JSONObject( buf.toString() );
 	}
-	private static void post( Wordpress wp, JSONObject tweet )
+	private static void index( SolrServer solr, JSONObject tweet )
 		throws Exception
 	{
-        Page p = new Page();
+try {
+		SolrInputDocument doc = new SolrInputDocument();
+		long id = tweet.getLong("id");
+		doc.addField("id", String.valueOf(id));
 		Date d = fmt1.parse( tweet.getString("date") );
-		p.setDateCreated(d);
-        p.setTitle( fmt2.format(d) );
+		doc.addField("date", fmt2.format(d));
 
-		StringBuffer desc = new StringBuffer();
-		desc.append("<table>\n<tr>\n");
-        desc.append("<td><a href=\"/sisot/tag/" + tweet.getString("user_id") + "\">");
-		desc.append("<img src=\"" + tweet.getString("user_image") + "\"></a></td>\n");
-        desc.append("<td><a href=\"/sisot/tag/" + tweet.getString("user_id") + "\">");
-		desc.append(tweet.getString("user_name") + "</a>:<br/>");
-        desc.append(linkify(tweet.getString("text")));
+        doc.addField("user_id", tweet.getString("user_id"));
+		doc.addField("user_image", tweet.getString("user_image"));
+		doc.addField("user_name", tweet.getString("user_name"));
+        doc.addField("tweet_text", linkify(tweet.getString("text")));
 
 		// media
 		JSONArray media = tweet.getJSONArray("media");
-		if ( media.length() > 0 ) { desc.append("<br/>"); }
 		for ( int i = 0; i < media.length(); i++ )
 		{
-			desc.append("<a href=\"" + media.getString(i) + "\">");
-			desc.append("<img src=\"" + media.getString(i) + "\"");
-			desc.append( " width=\"48\" height=\"48\"/></a>\n");
+			doc.addField("media", media.getString(i));
 		}
-        desc.append("</td></tr></table>");
-        p.setDescription(desc.toString());
 
 		// tags
 		JSONArray tagArr = tweet.getJSONArray("tags");
-		String tags = tweet.getString("user_id");
 		for ( int i = 0; i < tagArr.length(); i++ )
 		{
-			tags += "," + tagArr.getString(i);
+			doc.addField("tags", tagArr.getString(i));
 		}
-        p.setMt_keywords(tags);
 
-        String id = wp.newPost(p, true);
+		solr.add(doc);
+} catch ( Exception ex ) { ex.printStackTrace(); }
 	}
 	private static String linkify( String s )
 	{
@@ -131,12 +123,12 @@ public class Presser
 		{
 			if ( words[i].startsWith("@") || words[i].startsWith(".@") )
 			{
-				String link = "/sisot/tag/" + words[i].substring(words[i].indexOf("@")+1);
+				String link = "?f[user_id][]=" + words[i].substring(words[i].indexOf("@")+1);
 				buf.append( linkTo(link, words[i]) );
 			}
 			else if ( words[i].startsWith("#") )
 			{
-				String link = "/sisot/tag/" + words[i].substring(1);
+				String link = "?f[tags][]=" + words[i].substring(1);
 				buf.append( linkTo(link, words[i]) );
 			}
 			else if ( words[i].startsWith("http://")
@@ -167,7 +159,8 @@ public class Presser
 
 	public static void main( String[] args ) throws Exception
 	{
-		fmt2.setTimeZone( TimeZone.getTimeZone("America/New_York") );
+		//fmt2.setTimeZone( TimeZone.getTimeZone("America/New_York") );
+		fmt2.setTimeZone( TimeZone.getTimeZone("UTC") );
 
 		Properties props = new Properties();
 		props.load( new FileInputStream(args[0]) );

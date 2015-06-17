@@ -13,6 +13,7 @@ import java.util.Properties;
 
 import twitter4j.Paging;
 import twitter4j.RateLimitStatus;
+import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
@@ -22,7 +23,7 @@ import twitter4j.auth.AccessToken;
 import twitter4j.conf.Configuration;
 import twitter4j.conf.ConfigurationBuilder;
 import twitter4j.HashtagEntity;
-import twitter4j.MediaEntity;
+import twitter4j.ExtendedMediaEntity;
 import twitter4j.URLEntity;
 
 import org.json.JSONObject;
@@ -105,48 +106,68 @@ public class Fetcher
 	}
 	private static void fetch( Twitter twitter, File dir ) throws IOException
 	{
-		try
+		int limit = remaining( twitter, "statuses", "lookup" );
+		if ( limit < 1 )
 		{
-			int limit = remaining( twitter, "statuses", "show/:id" );
-			if ( limit < 1 )
-			{
-				return;
-			}
+			return;
+		}
 
-			int records = 0;
-			File[] files = dir.listFiles();
-			for ( int i = 0; i < files.length && records < limit; i++ )
+		int records = 0;
+		int batches = 0;
+		File[] files = dir.listFiles();
+		long[] ids = new long[100];
+		for ( int i = 0; i < files.length && batches < limit; i++ )
+		{
+			File f = files[i];
+			if ( f.getName().endsWith(".id") )
 			{
-				File f = files[i];
-				if ( f.getName().endsWith(".id") )
+				String id = f.getName().replaceAll(".id","");
+				File jsonFile = new File( dir, id + ".json" );
+				if ( !jsonFile.exists() )
 				{
-					String id = f.getName().replaceAll(".id","");
-					File jsonFile = new File( dir, id + ".json" );
-					if ( !jsonFile.exists() )
+					ids[records] = Long.parseLong(id);
+					records++;
+					if ( records == 100 )
 					{
-						records++;
-						System.out.println( records + ": " + id );
-						
-						String json = fetch( twitter, Long.parseLong(id) );
-						if ( json != null )
-						{
-							FileWriter fw = new FileWriter( jsonFile );
-							fw.write( json );
-							fw.close();
-							f.delete();
-						}
-						else
-						{
-							System.out.println("Error: " + id);
-							File errFile = new File( dir, id + ".err" );
-							f.renameTo( errFile );
-						}
+						fetchBatch(twitter, ids, dir);
+						batches++;
+						records = 0;
+						ids = new long[100];
 					}
 				}
 			}
-			if ( records <= limit )
+		}
+		if ( records > 0 )
+		{
+			fetchBatch(twitter, ids, dir);
+		}
+	}
+
+	private static void fetchBatch( Twitter twitter, long[] ids, File dir )
+	{
+		try
+		{
+			ResponseList<Status> tweets = twitter.lookup(ids);
+			for ( Status tweet : tweets )
 			{
-				System.out.println("rate limit reached");
+				String json = json(tweet);
+				String id = String.valueOf(tweet.getId());
+				File f = new File( dir, id + ".id" );
+				if ( json != null )
+				{
+					System.out.println("id " + id);
+					File jsonFile = new File( dir, id + ".json" );
+					FileWriter fw = new FileWriter( jsonFile );
+					fw.write( json );
+					fw.close();
+					f.delete();
+				}
+				else
+				{
+					System.out.println("Error: " + id);
+					File errFile = new File( dir, id + ".err" );
+					f.renameTo( errFile );
+				}
 			}
 		}
 		catch ( TwitterException ex )
@@ -164,6 +185,10 @@ public class Fetcher
 			{
 				System.out.println( "Error listing tweets: " + ex.toString() );
 			}
+		}
+		catch ( IOException ex )
+		{
+			System.out.println( "Error writing file: " + ex.toString());
 		}
 	}
 
@@ -200,11 +225,18 @@ public class Fetcher
 		json.put( "tags", tagList );
 
         // media
-        MediaEntity[] media = tweet.getMediaEntities();
+        ExtendedMediaEntity[] media = tweet.getExtendedMediaEntities();
 		List<String> mediaList = new ArrayList<>();
         for ( int i = 0; i < media.length; i++ )
         {
-            mediaList.add(media[i].getMediaURL());
+            if ( media[i].getType().equals("animated_gif") )
+			{
+            	mediaList.add(media[i].getMediaURL() + " " + media[i].getExpandedURL());
+			}
+			else
+			{
+            	mediaList.add(media[i].getMediaURL());
+			}
         }
 		json.put("media", mediaList );
 

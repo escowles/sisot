@@ -7,11 +7,11 @@ SISOT=`dirname $0`
 CONF=$SISOT/sisot.conf
 
 CP=""
-for i in $SISOT/lib/*.jar; do
+for i in $SISOT/lib/*.jar $SISOT/lib; do
 	CP=$i:$CP
 done
 
-for i in Lister Fetcher Presser; do
+for i in Lister Fetcher Indexer; do
 	echo `date +%T` $i
 	java -cp $CP org.ticklefish.sisot.$i $CONF
 done
